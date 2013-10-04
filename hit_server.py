@@ -239,8 +239,13 @@ def get_hits2():
     else:
         return {'hits': None}
 
-run(app, host='0.0.0.0', port=TEST_PORT, debug=True, server='sslbottle')
-# run(app, host='127.0.0.1', port=TEST_PORT, debug=True)
+def main(port, stats_queue=None):
+    run(app, host='0.0.0.0', port=port, debug=True, server='sslbottle')
+    # run(app, host='127.0.0.1', port=TEST_PORT, debug=True)
 
-# if __name__ == "__main__":
-#     print hit_for_id(1368809545607)
+def close():
+    app.close()
+    print('closed server')
+
+if __name__ == "__main__":
+    main(TEST_PORT)

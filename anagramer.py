@@ -1,9 +1,10 @@
 from __future__ import print_function
 
-import time
+# import time
 import logging
-import cPickle as pickle
-
+# import cPickle as pickle
+import multiprocessing
+import hit_server
 from twitterhandler import StreamHandler
 from datahandler import (DataCoordinator, NeedsMaintenance)
 import anagramstats as stats
@@ -22,11 +23,13 @@ def main():
     data_coordinator = DataCoordinator()
     stats.clear_stats()
 
+
     while 1:
         print('top of run loop')
         try:
             print('starting stream handler')
             stream_handler = StreamHandler()
+            hit_server.main()
             stream_handler.start()
             for processed_tweet in stream_handler:
                 data_coordinator.handle_input(processed_tweet)
@@ -41,6 +44,7 @@ def main():
             stream_handler.close()
             data_coordinator.close()
             stats.close()
+            hit_server.close()
             break
 
 

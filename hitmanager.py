@@ -133,7 +133,7 @@ def new_hits_count():
         # last_hit = cursor.fetchall()[0][0]
         # print (last_hit)
         # if (last_hit):
-        cursor.execute("SELECT * FROM hits WHERE hit_status > (?)",
+        cursor.execute("SELECT * FROM hits WHERE hit_status = (?)",
             (HIT_STATUS_REVIEW,))
         results = cursor.fetchall()
         return len(results)
