@@ -7,6 +7,7 @@ import multiprocessing
 import hit_server
 from twitterhandler import StreamHandler
 from datahandler import (DataCoordinator, NeedsMaintenance)
+from serverauth import TEST_PORT
 import anagramstats as stats
 
 
@@ -29,7 +30,8 @@ def main():
         try:
             print('starting stream handler')
             stream_handler = StreamHandler()
-            hit_server.main()
+            print('starting server')
+            hit_server.main(TEST_PORT)
             stream_handler.start()
             for processed_tweet in stream_handler:
                 data_coordinator.handle_input(processed_tweet)
