@@ -355,8 +355,33 @@ def debug_filters():
 
         print("failed %d of %d hits" % (len(fails), len(hits)))
         for h in fails:
-            if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED):
-                print("%s\n%s\n" % (h['tweet_one']['tweet_text'], h['tweet_two']['tweet_text']))
+            if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED, HIT_STATUS_REJECTED, HIT_STATUS_REVIEW):
+                stats = anagramfunctions.filter_stats(h)
+                print("(%d/%d/%0.2f/%0.2f/%0.1f/%0.1f)\n%s\n%s\n" % 
+                    (stats[0], stats[1], stats[2], stats[3], stats[4], stats[5],
+                    h['tweet_one']['tweet_text'],
+                    h['tweet_two']['tweet_text']))
+
+def avg_word_length_test(cutoff=3.0, only_posted=False):
+
+        hits = all_hits()
+        fails = []
+        for h in hits:
+            av1 = anagramfunctions.average_word_length(h['tweet_one']['tweet_text'])
+            av2 = anagramfunctions.average_word_length(h['tweet_two']['tweet_text'])
+            if av1 < cutoff or av2 < cutoff:
+                fails.append(h)
+
+        print("failed %d of %d hits" % (len(fails), len(hits)))
+        if only_posted:
+            fails = [h for h in fails if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED)]
+        for h in fails:
+            # if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED, HIT_STATUS_REJECTED, HIT_STATUS_REVIEW):
+            stats = anagramfunctions.filter_stats(h)
+            print("(%d/%d/%0.2f/%0.2f/%0.1f/%0.1f)\n%s\n%s\n" % 
+                (stats[0], stats[1], stats[2], stats[3], stats[4], stats[5],
+                h['tweet_one']['tweet_text'],
+                h['tweet_two']['tweet_text']))
 
 
 def main():
@@ -366,6 +391,8 @@ def main():
     parser.add_argument('-r', '--review', help='review new hits', action="store_true")
     parser.add_argument('-p', '--post', help='review approved hits for posting', action="store_true")
     parser.add_argument('-t', '--test', help='debug testing of filters', action="store_true")
+    parser.add_argument('-a', '--average', type=float, default=3.0, help='test average word length cutoff')
+    parser.add_argument('--only_posted', help='only display posted hits during debug', action="store_true")
     args = parser.parse_args()
 
     if args.review:
@@ -374,6 +401,9 @@ def main():
         review_hits(True)
     elif args.test:
         debug_filters()
+
+    elif args.average:
+        avg_word_length_test(args.average, args.only_posted)
 
 
 if __name__ == "__main__":

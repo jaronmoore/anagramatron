@@ -138,6 +138,21 @@ def _text_based_filters(tweet_text):
         return False
     return True
 
+def filter_stats(hit):
+
+    t1 = hit['tweet_one']['tweet_text']
+    t2 = hit['tweet_two']['tweet_text']
+
+    t1av = average_word_length(t1)
+    t2av = average_word_length(t2)
+    alpha1 = re.sub(r'[^a-zA-Z .,!?"\']', '', t1)
+    alpha1 = float(len(alpha1)) / len(t1)
+
+    alpha2 = re.sub(r'[^a-zA-Z .,!?"\']', '', t2)
+    alpha2 = float(len(alpha2)) / len(t2)
+
+    t1 = stripped_string(t1)
+    return (len(t1), len(set(t1)), alpha1, alpha2, t1av, t2av)
 
 def _low_letter_ratio(text, cutoff=0.8):
     t = re.sub(r'[^a-zA-Z .,!?"\']', '', text)
@@ -306,6 +321,9 @@ def grade_anagram(hit):
 
     return letter_count, unique_letters
 
+def average_word_length(text):
+    words = text.split()
+    return float(sum([len(w) for w in words])) / len(words)
 
 def format_seconds(seconds):
     """
