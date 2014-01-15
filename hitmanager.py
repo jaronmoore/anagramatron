@@ -343,14 +343,46 @@ def review_hits(to_post=False):
                     set_hit_status(display_hits[h]['id'], HIT_STATUS_SEEN)
             hits.remove(display_hits[h])
 
+        
+def debug_filters():
 
+        hits = all_hits()
+        fails = []
+        for h in hits:
+            if (not anagramfunctions.filter_tweet(h['tweet_one'], debug=True) 
+                or not anagramfunctions.filter_tweet(h['tweet_two'], debug=True)):
+                fails.append(h)
+
+        print("failed %d of %d hits" % (len(fails), len(hits)))
+        for h in fails:
+            print("%s\n%s\n" % (h['tweet_one']['tweet_text'], h['tweet_two']['tweet_text']))
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    # parser.add_argument('arg1', type=str, help="required argument")
+    parser.add_argument('-r', '--review', help='review new hits', action="store_true")
+    parser.add_argument('-p', '--post', help='review approved hits for posting', action="store_true")
+    parser.add_argument('-t', '--test', help='debug testing of filters', action="store_true")
+    args = parser.parse_args()
+
+    if args.review:
+        review_hits()
+    elif args.post:
+        review_hits(True)
+    elif args.test:
+        debug_filters()
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    if "-r" in args:
-        review_hits(True)
+    main()
+    # args = sys.argv[1:]
+    # if "-r" in args:
+    #     review_hits(True)
 
 
-    review_hits()
+    # review_hits()
+
+
 

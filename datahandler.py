@@ -191,6 +191,8 @@ class DataCoordinator(object):
         moveddb = self.datastore.archive()
         print('moved mdbm chunk: %s' % moveddb)
         print('mdbm contains %s chunks' % self.datastore.section_count())
+        # reload constants:
+        anagramfunctions.reload_constants()
 
 
     def close(self):

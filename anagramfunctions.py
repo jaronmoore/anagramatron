@@ -2,8 +2,14 @@ import re
 import anagramstats as stats
 import unicodedata
 
-from constants import (ANAGRAM_LOW_CHAR_CUTOFF, ANAGRAM_LOW_UNIQUE_CHAR_CUTOFF,
-    ANAGRAM_ALPHA_RATIO_CUTOFF, ENGLISH_LETTER_FREQUENCIES)
+import constants
+# from constants import (ANAGRAM_LOW_CHAR_CUTOFF, ANAGRAM_LOW_UNIQUE_CHAR_CUTOFF,
+    # ANAGRAM_ALPHA_RATIO_CUTOFF, ENGLISH_LETTER_FREQUENCIES)
+
+ANAGRAM_LOW_CHAR_CUTOFF = constants.ANAGRAM_LOW_CHAR_CUTOFF 
+ANAGRAM_LOW_UNIQUE_CHAR_CUTOFF = constants.ANAGRAM_LOW_UNIQUE_CHAR_CUTOFF
+ANAGRAM_ALPHA_RATIO_CUTOFF = constants.ANAGRAM_ALPHA_RATIO_CUTOFF
+ENGLISH_LETTER_FREQUENCIES = constants.ENGLISH_LETTER_FREQUENCIES
 
 ENGLISH_LETTER_LIST = sorted(ENGLISH_LETTER_FREQUENCIES.keys(),
                              key=lambda t: ENGLISH_LETTER_FREQUENCIES[t])
@@ -14,6 +20,15 @@ ENGLISH_LETTER_LIST = sorted(ENGLISH_LETTER_FREQUENCIES.keys(),
 freqsort = ENGLISH_LETTER_FREQUENCIES
 # just to keep line_lengths sane
 
+def reload_constants():
+    """
+    lets us modify certain perametres without restarting the program
+    """
+    reload(constants)
+    global ANAGRAM_LOW_CHAR_CUTOFF, ANAGRAM_LOW_UNIQUE_CHAR_CUTOFF, ANAGRAM_ALPHA_RATIO_CUTOFF
+    ANAGRAM_LOW_CHAR_CUTOFF = constants.ANAGRAM_LOW_CHAR_CUTOFF 
+    ANAGRAM_LOW_UNIQUE_CHAR_CUTOFF = constants.ANAGRAM_LOW_UNIQUE_CHAR_CUTOFF
+    ANAGRAM_ALPHA_RATIO_CUTOFF = constants.ANAGRAM_ALPHA_RATIO_CUTOFF
 
 
 def improved_hash(text, debug=False):
@@ -91,17 +106,30 @@ def _text_decodes_to_ascii(text):
 
 
 def _basic_filters(tweet):
-    if tweet.get('lang') != 'en':
-        return False
-    if len(tweet.get('entities').get('user_mentions')) is not 0:
+    try:
+        if tweet.get('lang', 'en') != 'en':
+            return False
+    except AttributeError:
+        pass
+    if len(tweet.get('entities', {}).get('user_mentions', [])) is not 0:
         return False
     #check for retweets
-    if tweet.get('retweeted_status'):
+    if tweet.get('retweeted_status', None):
         return False
     # check for links:
-    if len(tweet.get('entities').get('urls')) is not 0:
+    if len(tweet.get('entities', {}).get('urls', [])) is not 0:
         return False
-    t = stripped_string(tweet['text'])
+    try:
+        if not _text_based_filters(tweet['text']):
+            return False
+    except KeyError:
+        # for debugging on old results, which have different keys :-|
+        if not _text_based_filters(tweet['tweet_text']):
+            return False
+    return True
+
+def _text_based_filters(tweet_text):
+    t = stripped_string(tweet_text)
     if len(t) <= ANAGRAM_LOW_CHAR_CUTOFF:
         return False
     # ignore tweets with few characters
@@ -118,22 +146,30 @@ def _low_letter_ratio(text, cutoff=0.8):
     return False
 
 
-def filter_tweet(tweet):
+def filter_tweet(tweet, debug=False):
     """
     filters out anagram-inappropriate tweets.
     Returns the original tweet object and cleaned tweet text on success.
     """
+
     if not _basic_filters(tweet):
         return False
 
-    tweet_text = correct_encodings(tweet.get('text'))
-    if not _text_decodes_to_ascii(tweet_text):
-        # check for latin chars:
-        if _text_contains_tricky_chars(tweet_text):
-            tweet_text = _strip_accents(tweet_text)
+    if not debug:
+        tweet_text = correct_encodings(tweet.get('text'))
+        if not _text_decodes_to_ascii(tweet_text):
+            # check for latin chars:
+            if _text_contains_tricky_chars(tweet_text):
+                tweet_text = _strip_accents(tweet_text)
+
+    else:
+        tweet_text = tweet['tweet_text']
 
     if _low_letter_ratio(tweet_text, ANAGRAM_ALPHA_RATIO_CUTOFF):
         return False
+
+    if debug:
+        return tweet
 
     return {'tweet_hash': improved_hash(tweet_text),
             'tweet_id': long(tweet['id_str']),
