@@ -355,7 +355,8 @@ def debug_filters():
 
         print("failed %d of %d hits" % (len(fails), len(hits)))
         for h in fails:
-            print("%s\n%s\n" % (h['tweet_one']['tweet_text'], h['tweet_two']['tweet_text']))
+            if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED):
+                print("%s\n%s\n" % (h['tweet_one']['tweet_text'], h['tweet_two']['tweet_text']))
 
 
 def main():
