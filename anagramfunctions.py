@@ -1,3 +1,4 @@
+from __future__ import print_function
 import re
 import anagramstats as stats
 import unicodedata
@@ -160,6 +161,45 @@ def _low_letter_ratio(text, cutoff=0.8):
         return True
     return False
 
+def average_word_length(text):
+    words = text.split()
+    return float(sum([len(w) for w in words])) / len(words)
+
+
+import nltk
+words = set([w.lower() for w in nltk.corpus.words.words()])
+words.update(set([w.lower() for w in nltk.corpus.cmudict.words()]))
+
+def real_word_ratio(text, debug=False, corpus=None):
+    text = de_camel(text)
+    t = re.sub(r"[^a-zA-Z ']", '', text).lower().split()
+    real = len([w for w in t if is_real_word(w)])
+
+    if debug:
+        tt = [(w, w in words) for w in t]
+        print(text, '\n', ' '.join(t))
+        print(''.join([str(int(x)).ljust(max(4, len(y))) for y,x in tt]))
+
+    return float(real) / len(t)
+
+def is_real_word(word):
+    if word in words:
+        return True
+
+    if re.search(r'(s|ed)$', word):
+        # some plurals and tenses aren't in our dictionary
+        root = re.sub(r'(s|ed)$', '', word)
+        if root in words:
+            print('########### passed with %s not %s' % (root, word))
+            return True
+
+    return False
+
+
+def de_camel(word):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1 \2', word)
+    return re.sub('([a-z0-9])([A-Z])', r'\1 \2', s1).lower()
+
 
 def filter_tweet(tweet, debug=False):
     """
@@ -321,9 +361,6 @@ def grade_anagram(hit):
 
     return letter_count, unique_letters
 
-def average_word_length(text):
-    words = text.split()
-    return float(sum([len(w) for w in words])) / len(words)
 
 def format_seconds(seconds):
     """
@@ -341,13 +378,13 @@ def format_seconds(seconds):
 
 
 def show_anagram(one, two):
-    print one
-    print two
-    print stripped_string(one, spaces=True)
-    print stripped_string(two, spaces=True)
-    print stripped_string(one)
-    print stripped_string(two)
-    print ''.join(sorted(stripped_string(two), key=str.lower))
+    print(one)
+    print(two)
+    print(stripped_string(one, spaces=True))
+    print(stripped_string(two, spaces=True))
+    print(stripped_string(one))
+    print(stripped_string(two))
+    print(''.join(sorted(stripped_string(two), key=str.lower)))
 
 
 def stripped_string(text, spaces=False):

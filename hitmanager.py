@@ -343,46 +343,72 @@ def review_hits(to_post=False):
                     set_hit_status(display_hits[h]['id'], HIT_STATUS_SEEN)
             hits.remove(display_hits[h])
 
+# TESTING STUFF
         
 def debug_filters():
+    print('filter debugging')
+    hits = all_hits()
+    fails = []
+    for h in hits:
+        if (not anagramfunctions.filter_tweet(h['tweet_one'], debug=True) 
+            or not anagramfunctions.filter_tweet(h['tweet_two'], debug=True)):
+            fails.append(h)
 
-        hits = all_hits()
-        fails = []
-        for h in hits:
-            if (not anagramfunctions.filter_tweet(h['tweet_one'], debug=True) 
-                or not anagramfunctions.filter_tweet(h['tweet_two'], debug=True)):
-                fails.append(h)
-
-        print("failed %d of %d hits" % (len(fails), len(hits)))
-        for h in fails:
-            if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED, HIT_STATUS_REJECTED, HIT_STATUS_REVIEW):
-                stats = anagramfunctions.filter_stats(h)
-                print("(%d/%d/%0.2f/%0.2f/%0.1f/%0.1f)\n%s\n%s\n" % 
-                    (stats[0], stats[1], stats[2], stats[3], stats[4], stats[5],
-                    h['tweet_one']['tweet_text'],
-                    h['tweet_two']['tweet_text']))
-
-def avg_word_length_test(cutoff=3.0, only_posted=False):
-
-        hits = all_hits()
-        fails = []
-        for h in hits:
-            av1 = anagramfunctions.average_word_length(h['tweet_one']['tweet_text'])
-            av2 = anagramfunctions.average_word_length(h['tweet_two']['tweet_text'])
-            if av1 < cutoff or av2 < cutoff:
-                fails.append(h)
-
-        print("failed %d of %d hits" % (len(fails), len(hits)))
-        if only_posted:
-            fails = [h for h in fails if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED)]
-        for h in fails:
-            # if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED, HIT_STATUS_REJECTED, HIT_STATUS_REVIEW):
+    print("failed %d of %d hits" % (len(fails), len(hits)))
+    for h in fails:
+        if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED, HIT_STATUS_REJECTED, HIT_STATUS_REVIEW):
             stats = anagramfunctions.filter_stats(h)
             print("(%d/%d/%0.2f/%0.2f/%0.1f/%0.1f)\n%s\n%s\n" % 
                 (stats[0], stats[1], stats[2], stats[3], stats[4], stats[5],
                 h['tweet_one']['tweet_text'],
                 h['tweet_two']['tweet_text']))
 
+
+def avg_word_length_test(cutoff=3.0, only_posted=False):
+
+    print('testing average word length')
+    hits = all_hits()
+    fails = []
+    for h in hits:
+        av1 = anagramfunctions.average_word_length(h['tweet_one']['tweet_text'])
+        av2 = anagramfunctions.average_word_length(h['tweet_two']['tweet_text'])
+        if av1 < cutoff or av2 < cutoff:
+            fails.append(h)
+
+    print("failed %d of %d hits" % (len(fails), len(hits)))
+    if only_posted:
+        fails = [h for h in fails if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED)]
+    for h in fails:
+        # if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED, HIT_STATUS_REJECTED, HIT_STATUS_REVIEW):
+        stats = anagramfunctions.filter_stats(h)
+        print("(%d/%d/%0.2f/%0.2f/%0.1f/%0.1f)\n%s\n%s\n" % 
+            (stats[0], stats[1], stats[2], stats[3], stats[4], stats[5],
+            h['tweet_one']['tweet_text'],
+            h['tweet_two']['tweet_text']))
+
+
+def real_word_ratios(cutoff=0.5, only_posted=False, source=None):
+    hits = all_hits()
+    fails = []
+    print('testing real word ratios')
+    for h in hits:
+        av1 = anagramfunctions.real_word_ratio(h['tweet_one']['tweet_text'])
+        av2 = anagramfunctions.real_word_ratio(h['tweet_two']['tweet_text'])
+        if av1 < cutoff or av2 < cutoff:
+            fails.append(h)
+
+    print("failed %d of %d hits" % (len(fails), len(hits)))
+    if only_posted:
+        fails = [h for h in fails if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED)]
+    for h in fails:
+        # if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED, HIT_STATUS_REJECTED, HIT_STATUS_REVIEW):
+        # stats = anagramfunctions.filter_stats(h)
+        av1 = anagramfunctions.real_word_ratio(h['tweet_one']['tweet_text'], True)
+        av2 = anagramfunctions.real_word_ratio(h['tweet_two']['tweet_text'], True)
+        # print("(%0.2f/%0.2f)\n%s\n%s\n" % 
+        #     (av1, av2,
+        #     h['tweet_one']['tweet_text'],
+        #     h['tweet_two']['tweet_text']))
 
 def main():
     import argparse
@@ -391,8 +417,9 @@ def main():
     parser.add_argument('-r', '--review', help='review new hits', action="store_true")
     parser.add_argument('-p', '--post', help='review approved hits for posting', action="store_true")
     parser.add_argument('-t', '--test', help='debug testing of filters', action="store_true")
-    parser.add_argument('-a', '--average', type=float, default=3.0, help='test average word length cutoff')
-    parser.add_argument('--only_posted', help='only display posted hits during debug', action="store_true")
+    parser.add_argument('-a', '--average', type=float, help='test average word length cutoff')
+    parser.add_argument('-x', '--only_posted', help='only display posted hits during debug', action="store_true")
+    parser.add_argument('--realwords', type=float, help='test real word ratios')
     args = parser.parse_args()
 
     if args.review:
@@ -404,6 +431,9 @@ def main():
 
     elif args.average:
         avg_word_length_test(args.average, args.only_posted)
+
+    elif args.realwords:
+        real_word_ratios(args.realwords, args.only_posted)
 
 
 if __name__ == "__main__":
