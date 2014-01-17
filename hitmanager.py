@@ -345,7 +345,7 @@ def review_hits(to_post=False):
 
 # TESTING STUFF
         
-def debug_filters():
+def debug_filters(only_posted=False):
     print('filter debugging')
     hits = all_hits()
     fails = []
@@ -355,13 +355,14 @@ def debug_filters():
             fails.append(h)
 
     print("failed %d of %d hits" % (len(fails), len(hits)))
+    if only_posted:
+    fails = [f for f in fails if f['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED)]
     for h in fails:
-        if h['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED, HIT_STATUS_REJECTED, HIT_STATUS_REVIEW):
-            stats = anagramfunctions.filter_stats(h)
-            print("(%d/%d/%0.2f/%0.2f/%0.1f/%0.1f)\n%s\n%s\n" % 
-                (stats[0], stats[1], stats[2], stats[3], stats[4], stats[5],
-                h['tweet_one']['tweet_text'],
-                h['tweet_two']['tweet_text']))
+        stats = anagramfunctions.filter_stats(h)
+        print("(%d/%d/%0.2f/%0.2f/%0.1f/%0.1f)\n%s\n%s\n" % 
+            (stats[0], stats[1], stats[2], stats[3], stats[4], stats[5],
+            h['tweet_one']['tweet_text'],
+            h['tweet_two']['tweet_text']))
 
 
 def avg_word_length_test(cutoff=3.0, only_posted=False):
