@@ -356,7 +356,7 @@ def debug_filters(only_posted=False):
 
     print("failed %d of %d hits" % (len(fails), len(hits)))
     if only_posted:
-    fails = [f for f in fails if f['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED)]
+        fails = [f for f in fails if f['status'] in (HIT_STATUS_POSTED, HIT_STATUS_APPROVED)]
     for h in fails:
         stats = anagramfunctions.filter_stats(h)
         print("(%d/%d/%0.2f/%0.2f/%0.1f/%0.1f)\n%s\n%s\n" % 
